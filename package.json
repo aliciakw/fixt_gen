@@ -1,0 +1,17 @@
+{
+  "name": "@quartet/fixt_gen",
+  "version": "1.0.0",
+  "description": "\"Generate Moyo fixtures file with Javascript\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "uuid": "^3.0.1"
+  },
+  "devDependencies": {
+    "flow-bin": "^0.37.4"
+  }
+}
