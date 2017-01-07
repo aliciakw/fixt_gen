@@ -1,0 +1,48 @@
+;; emails 
+{:db/id           #db/id[:db.part/user -1]
+ :email/quartetId #uuid "dcdff6f0-d47b-11e6-8590-83842f7d5083"
+ :email/address "awillett+bhp@quartethealth.com"}
+{:db/id           #db/id[:db.part/user -4]
+ :email/quartetId #uuid "dce01e01-d47b-11e6-8590-83842f7d5083"
+ :email/address "awillett+admin@quartethealth.com"}
+{:db/id           #db/id[:db.part/user -7]
+ :email/quartetId #uuid "dce01e04-d47b-11e6-8590-83842f7d5083"
+ :email/address "awillett+pcp@quartethealth.com"}
+
+;; persons 
+{:db/id           #db/id[:db.part/user -2]
+ :person/quartetId #uuid "dcdff6f1-d47b-11e6-8590-83842f7d5083"
+ :person/emailRef #db/id[:db.part/user -1]
+ :person/fullName "Ian Turrell"
+ :person/roles [:person.role/behavioralHealthProvider]}
+{:db/id           #db/id[:db.part/user -5]
+ :person/quartetId #uuid "dce01e02-d47b-11e6-8590-83842f7d5083"
+ :person/emailRef #db/id[:db.part/user -4]
+ :person/fullName "Alicia Sun"
+ :person/roles [:person.role/admin]}
+{:db/id           #db/id[:db.part/user -8]
+ :person/quartetId #uuid "dce01e05-d47b-11e6-8590-83842f7d5083"
+ :person/emailRef #db/id[:db.part/user -7]
+ :person/fullName "Mustafa Khasalev"
+ :person/roles [:person.role/medicalProvider]}
+
+;; accounts 
+{:db/id           #db/id[:db.part/user -3]
+ :account/quartetId #uuid "dce01e00-d47b-11e6-8590-83842f7d5083"
+ :account/password "pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM="
+ :account/emailRef #db/id[:db.part/user -1]
+ :account/personRef #db/id[:db.part/user -2]
+ :account/collabRegistrationInst #inst "2015-06-06T15:31:29.331"}
+{:db/id           #db/id[:db.part/user -6]
+ :account/quartetId #uuid "dce01e03-d47b-11e6-8590-83842f7d5083"
+ :account/password "pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM="
+ :account/emailRef #db/id[:db.part/user -4]
+ :account/personRef #db/id[:db.part/user -5]
+ :account/collabRegistrationInst #inst "2015-06-06T15:31:29.331"}
+{:db/id           #db/id[:db.part/user -9]
+ :account/quartetId #uuid "dce01e06-d47b-11e6-8590-83842f7d5083"
+ :account/password "pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM="
+ :account/emailRef #db/id[:db.part/user -7]
+ :account/personRef #db/id[:db.part/user -8]
+ :account/collabRegistrationInst #inst "2015-06-06T15:31:29.331"}
+

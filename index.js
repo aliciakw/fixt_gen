@@ -1,14 +1,17 @@
 // @flow
 const uuidV1 = require('uuid/v1');
-const fixtures = require('./fixtures'),
-      firstNames = fixtures["firstNames"],
-      lastNames = fixtures["lastNames"];
+const fs = require('fs');
 
-const username = 'awillett';
+const fixt_file = fs.createWriteStream(__dirname + '/fixtures.edn', {flags : 'w'});
+const dummy = require('./dummy'),
+      firstNames = dummy["firstNames"],
+      lastNames = dummy["lastNames"];
+
+const username = process.argv[2] || 'test';
 
 const emailAt = '@quartethealth.com',
       password = 'pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM=',
-      collabRegistrationInst = '#inst "2015-06-06T15:31:29.331"',
+      collabRegistrationInst = '2015-06-06T15:31:29.331',
       apps = ['bhp', 'admin', 'pcp'],
       roles = {
         bhp: '[:person.role/behavioralHealthProvider]',
@@ -16,23 +19,6 @@ const emailAt = '@quartethealth.com',
         admin: '[:person.role/admin]',
         patient: '[:person.role/patient]'
 };
-
-let dbIndex = 1;
-let emails = [],
-    persons = [],
-    accounts = [],
-    behavioralProviders = [],
-    medicalProviders = [];
-
-function assignDbId (index) {
-  return ':db/id           #db/id[:db.part/user -'+ index +']';
-}
-function assignQuartetId (model) {
-  return '\n:email/quartetId #uuid ' + uuidV1();
-}
-function assignCollabRegistrationInst (model) {
-  return ':' + model + '/collabRegistrationInst ' + collabRegistrationInst;
-}
 
 const pickRandom = (arr) => {
   const position = Math.ceil(arr.length * Math.random()) - 1;
@@ -43,11 +29,13 @@ function randomName () {
   const last = pickRandom(lastNames);
   return first + ' ' + last;
 }
+// create data
+
 
 function generateEmail (username, label='') {
   if (label) { label = '+' + label; }
   const dbId = dbIndex;
-  emails.push ({
+  email.push ({
     dbId,
     quartetId: uuidV1(),
     address: username + label + emailAt
@@ -58,7 +46,7 @@ function generateEmail (username, label='') {
 
 const generatePerson = (emailRef, appName) => {
   const dbId = dbIndex;
-  persons.push({
+  person.push({
     dbId,
     quartetId: uuidV1(),
     emailRef,
@@ -69,25 +57,85 @@ const generatePerson = (emailRef, appName) => {
   return dbId
 }
 
-const generateAdminAccts = () => {
-  apps.forEach((appName, i) => {
-    const emailRef = generateEmail(username, appName);
-    const personRef = generatePerson(emailRef, appName);
-    accounts.push({
-      dbId: dbIndex,
-      quartetId: uuidV1(),
-      password,
-      emailRef,
-      personRef,
-      collabRegistrationInst
-    });
-    dbIndex++;
+const generateAdminAcct = (appName) => {
+  const emailRef = generateEmail(username, appName);
+  const personRef = generatePerson(emailRef, appName);
+  account.push({
+    dbId: dbIndex,
+    quartetId: uuidV1(),
+    password,
+    emailRef,
+    personRef,
+    collabRegistrationInst
   });
+  dbIndex++;
 }
 
-generateAdminAccts();
+// write to edn file
+// helpers
+const enums = ['roles'];
+const refRegex = /Ref/;
+const dateInstRegex = /\d{4}-\d{2}-\d{2}/;
+
+const assignDbId = (dbid) => ':db/id           #db/id[:db.part/user -'+ dbid +']';
+const assignUUIDAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' #uuid \"' + val + '\"';
+const assignEnumAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' ' + val ;
+const assignInstAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' #inst \"' + val + '\"';
+const assignRefAttr = (model, attr, val) => {
+  return '\n :' + model.replace('Ref', '') + '/' + attr + ' #db/id[:db.part/user -' + val + ']';
+}
+const assignStringAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' \"' + val + '\"';
 
 
 
+let edn;
+const recordAsEdn = (model, record) => {
+  const attributes = Object.keys(record);
+  edn = '{'
 
-console.log(accounts);
+  attributes.forEach(attr => {
+    if (attr === 'dbId') {
+      edn += assignDbId(record[attr]);
+    } else if (attr === 'quartetId') {
+      edn += assignUUIDAttr(model, attr, record[attr]);
+    } else if (enums.indexOf(attr) >= 0) {
+      edn += assignEnumAttr(model, attr, record[attr]);
+    } else if (refRegex.test(attr)) {
+      edn += assignRefAttr(model, attr, record[attr]);
+    } else if (dateInstRegex.test(record[attr])) {
+      edn += assignInstAttr(model, attr, record[attr]);
+    } else {
+      edn += assignStringAttr(model, attr, record[attr]);
+    }
+  });
+  return edn + '}\n';
+}
+
+const fixtures = [];
+let dbIndex = 1;
+let email = [],
+    person = [],
+    account = [],
+    behavioralProvider = [],
+    medicalProvider = [];
+
+
+apps.forEach(appName => {
+  generateAdminAcct(appName);
+});
+
+const models = { email, person, account },
+      modelNames = Object.keys(models);
+let data;
+modelNames.forEach((modelName) => {
+  data = models[modelName];
+  fixt_file.write(';; ' + modelName + 's \n');
+  data.forEach(record => {
+    fixt_file.write(recordAsEdn(modelName, record));
+  });
+  fixt_file.write('\n');
+});
+
+
+
+console.log('done.');
