@@ -19,3 +19,10 @@ export type account = {
   emailRef: number,
   collabRegistrationInst: string
 }
+
+export type accountLogin = {
+  dbId: number,
+  quartetId: string,
+  accountRef: number,
+  clientId: string
+}

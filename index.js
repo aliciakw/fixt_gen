@@ -10,16 +10,29 @@ const dummy = require('./dummy'),
 const username = process.argv[2] || 'test';
 
 const emailAt = '@quartethealth.com',
-      password = 'pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM=',
-      collabRegistrationInst = '2015-06-06T15:31:29.331',
       apps = ['bhp', 'admin', 'pcp'],
-      roles = {
-        bhp: '[:person.role/behavioralHealthProvider]',
-        pcp: '[:person.role/medicalProvider]',
-        admin: '[:person.role/admin]',
-        patient: '[:person.role/patient]'
+      abbrevs = {
+        bhp: 'behavioralHealthProvider',
+        pcp: 'medicalProvider',
+        admin: 'admin',
+        patient: 'patient'
 };
 
+const models = {
+        'email': [],
+        'person': [],
+        'account': [],
+        'account.login': [],
+        'behavioralProvider': [],
+        'medicalProvider': [],
+        'patient': []
+      };
+
+const getDbId = () => {
+  const dbId = dbIndex;
+  dbIndex++;
+  return dbId;
+}
 const pickRandom = (arr) => {
   const position = Math.ceil(arr.length * Math.random()) - 1;
   return arr[position];
@@ -29,49 +42,92 @@ function randomName () {
   const last = pickRandom(lastNames);
   return first + ' ' + last;
 }
-// create data
 
+
+//                            //
+//        create data         //
+//                            //
 
 function generateEmail (username, label='') {
   if (label) { label = '+' + label; }
-  const dbId = dbIndex;
-  email.push ({
+  const dbId = getDbId();
+  models['email'].push ({
     dbId,
     quartetId: uuidV1(),
     address: username + label + emailAt
   });
-  dbIndex++;
+
   return dbId
 }
 
 const generatePerson = (emailRef, appName) => {
-  const dbId = dbIndex;
-  person.push({
+  const dbId = getDbId();
+  models['person'].push({
     dbId,
     quartetId: uuidV1(),
     emailRef,
     fullName: randomName(),
-    roles: roles[appName]
+    roles: '[:person.role/' + abbrevs[appName] + ']'
   });
-  dbIndex++;
+
   return dbId
 }
 
-const generateAdminAcct = (appName) => {
-  const emailRef = generateEmail(username, appName);
-  const personRef = generatePerson(emailRef, appName);
-  account.push({
-    dbId: dbIndex,
+const password = 'pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM=',
+      collabRegistrationInst = '2015-06-06T15:31:29.331',
+      clientId = 'fancy_and_definitely_real_client_id';
+
+const generateAccount = (emailRef, personRef) => {
+  const accountDbId = getDbId();
+  const accountLoginDbId = getDbId();
+  models['account'].push({
+    dbId: accountDbId,
     quartetId: uuidV1(),
     password,
     emailRef,
     personRef,
     collabRegistrationInst
   });
-  dbIndex++;
+
+  models['account.login'].push({
+    dbId: accountLoginDbId,
+    quartetId: uuidV1(),
+    accountRef: accountDbId,
+    clientId
+  });
+
+  return;
 }
 
-// write to edn file
+const generateAppAcct = (appName) => {
+  const emailRef = generateEmail(username, appName);
+  const personRef = generatePerson(emailRef, appName);
+  generateAccount(emailRef, personRef);
+
+  // switch (appName) {
+  //   case 'bhp':
+  //     generateBhp(personRef);
+  //     break;
+  //   case 'pcp':
+  //     generatePcp(personRef);
+  //     break;
+  //   case 'patient':
+  //     generatePatient(personRef);
+  //     break;
+  // }
+
+  return;
+}
+
+
+
+
+//                             //
+//        write as edn         //
+//                             //
+
+
+
 // helpers
 const enums = ['roles'];
 const refRegex = /Ref/;
@@ -111,21 +167,16 @@ const recordAsEdn = (model, record) => {
   return edn + '}\n';
 }
 
-const fixtures = [];
+const finalFixtures = [];
 let dbIndex = 1;
-let email = [],
-    person = [],
-    account = [],
-    behavioralProvider = [],
-    medicalProvider = [];
+const modelNames = Object.keys(models);
+
 
 
 apps.forEach(appName => {
-  generateAdminAcct(appName);
+  generateAppAcct(appName);
 });
 
-const models = { email, person, account },
-      modelNames = Object.keys(models);
 let data;
 modelNames.forEach((modelName) => {
   data = models[modelName];

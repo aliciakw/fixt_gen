@@ -1,48 +1,68 @@
 ;; emails 
 {:db/id           #db/id[:db.part/user -1]
- :email/quartetId #uuid "dcdff6f0-d47b-11e6-8590-83842f7d5083"
+ :email/quartetId #uuid "6658f530-d4f9-11e6-be8e-cbc1e9747fd0"
  :email/address "awillett+bhp@quartethealth.com"}
-{:db/id           #db/id[:db.part/user -4]
- :email/quartetId #uuid "dce01e01-d47b-11e6-8590-83842f7d5083"
+{:db/id           #db/id[:db.part/user -5]
+ :email/quartetId #uuid "66591c42-d4f9-11e6-be8e-cbc1e9747fd0"
  :email/address "awillett+admin@quartethealth.com"}
-{:db/id           #db/id[:db.part/user -7]
- :email/quartetId #uuid "dce01e04-d47b-11e6-8590-83842f7d5083"
+{:db/id           #db/id[:db.part/user -9]
+ :email/quartetId #uuid "66591c46-d4f9-11e6-be8e-cbc1e9747fd0"
  :email/address "awillett+pcp@quartethealth.com"}
 
 ;; persons 
 {:db/id           #db/id[:db.part/user -2]
- :person/quartetId #uuid "dcdff6f1-d47b-11e6-8590-83842f7d5083"
+ :person/quartetId #uuid "6658f531-d4f9-11e6-be8e-cbc1e9747fd0"
  :person/emailRef #db/id[:db.part/user -1]
- :person/fullName "Ian Turrell"
+ :person/fullName "Sigourney Khasalev"
  :person/roles [:person.role/behavioralHealthProvider]}
-{:db/id           #db/id[:db.part/user -5]
- :person/quartetId #uuid "dce01e02-d47b-11e6-8590-83842f7d5083"
- :person/emailRef #db/id[:db.part/user -4]
- :person/fullName "Alicia Sun"
+{:db/id           #db/id[:db.part/user -6]
+ :person/quartetId #uuid "66591c43-d4f9-11e6-be8e-cbc1e9747fd0"
+ :person/emailRef #db/id[:db.part/user -5]
+ :person/fullName "Scooby Clojure"
  :person/roles [:person.role/admin]}
-{:db/id           #db/id[:db.part/user -8]
- :person/quartetId #uuid "dce01e05-d47b-11e6-8590-83842f7d5083"
- :person/emailRef #db/id[:db.part/user -7]
- :person/fullName "Mustafa Khasalev"
+{:db/id           #db/id[:db.part/user -10]
+ :person/quartetId #uuid "66591c47-d4f9-11e6-be8e-cbc1e9747fd0"
+ :person/emailRef #db/id[:db.part/user -9]
+ :person/fullName "Skye Ajax"
  :person/roles [:person.role/medicalProvider]}
 
 ;; accounts 
 {:db/id           #db/id[:db.part/user -3]
- :account/quartetId #uuid "dce01e00-d47b-11e6-8590-83842f7d5083"
+ :account/quartetId #uuid "66591c40-d4f9-11e6-be8e-cbc1e9747fd0"
  :account/password "pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM="
  :account/emailRef #db/id[:db.part/user -1]
  :account/personRef #db/id[:db.part/user -2]
  :account/collabRegistrationInst #inst "2015-06-06T15:31:29.331"}
-{:db/id           #db/id[:db.part/user -6]
- :account/quartetId #uuid "dce01e03-d47b-11e6-8590-83842f7d5083"
+{:db/id           #db/id[:db.part/user -7]
+ :account/quartetId #uuid "66591c44-d4f9-11e6-be8e-cbc1e9747fd0"
  :account/password "pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM="
- :account/emailRef #db/id[:db.part/user -4]
- :account/personRef #db/id[:db.part/user -5]
+ :account/emailRef #db/id[:db.part/user -5]
+ :account/personRef #db/id[:db.part/user -6]
  :account/collabRegistrationInst #inst "2015-06-06T15:31:29.331"}
-{:db/id           #db/id[:db.part/user -9]
- :account/quartetId #uuid "dce01e06-d47b-11e6-8590-83842f7d5083"
+{:db/id           #db/id[:db.part/user -11]
+ :account/quartetId #uuid "66591c48-d4f9-11e6-be8e-cbc1e9747fd0"
  :account/password "pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM="
- :account/emailRef #db/id[:db.part/user -7]
- :account/personRef #db/id[:db.part/user -8]
+ :account/emailRef #db/id[:db.part/user -9]
+ :account/personRef #db/id[:db.part/user -10]
  :account/collabRegistrationInst #inst "2015-06-06T15:31:29.331"}
+
+;; account.logins 
+{:db/id           #db/id[:db.part/user -4]
+ :account.login/quartetId #uuid "66591c41-d4f9-11e6-be8e-cbc1e9747fd0"
+ :account.login/accountRef #db/id[:db.part/user -3]
+ :account.login/clientId "fancy_and_definitely_real_client_id"}
+{:db/id           #db/id[:db.part/user -8]
+ :account.login/quartetId #uuid "66591c45-d4f9-11e6-be8e-cbc1e9747fd0"
+ :account.login/accountRef #db/id[:db.part/user -7]
+ :account.login/clientId "fancy_and_definitely_real_client_id"}
+{:db/id           #db/id[:db.part/user -12]
+ :account.login/quartetId #uuid "66591c49-d4f9-11e6-be8e-cbc1e9747fd0"
+ :account.login/accountRef #db/id[:db.part/user -11]
+ :account.login/clientId "fancy_and_definitely_real_client_id"}
+
+;; behavioralProviders 
+
+;; medicalProviders 
+
+;; patients 
 
