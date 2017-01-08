@@ -4,9 +4,10 @@ const uuidV1 = require('uuid/v1');
 const fs = require('fs');
 
 const fixt_file = fs.createWriteStream(__dirname + '/../fixtures.edn', {flags : 'w'});
-import dummy from '../dummy.json';
-const firstNames = dummy["firstNames"],
-      lastNames = dummy["lastNames"];
+import names from './names';
+
+// utilize enums endpoint if one becomes available
+import providerEnums from './provider-enums';
 
 const username = process.argv[2] || 'test';
 
@@ -33,16 +34,18 @@ const getDbId = () => {
   const dbId = dbIndex;
   dbIndex++;
   return dbId;
-}
+};
 const pickRandom = (arr) => {
-  const position = Math.ceil(arr.length * Math.random()) - 1;
-  return arr[position];
-}
-function randomName () {
-  const first = pickRandom(firstNames);
-  const last = pickRandom(lastNames);
+  if (arr) {
+    const position = Math.ceil(arr.length * Math.random()) - 1;
+    return arr[position];
+  }
+};
+const randomName = () => {
+  const first = pickRandom(names.first);
+  const last = pickRandom(names.last);
   return first + ' ' + last;
-}
+};
 
 
 //                            //
