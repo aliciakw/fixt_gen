@@ -1,1 +1,1 @@
-A script to generate Moyo fixtures with Javascript.
+Generate Moyo fixtures with Javascript: `npm run gen`
