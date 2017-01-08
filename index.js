@@ -99,22 +99,48 @@ const generateAccount = (emailRef, personRef) => {
   return;
 }
 
+const generateBhp = (personRef) => {
+  const dbId = getDbId();
+  models['behavioralProvider'].push({
+    dbId,
+    quartetId: uuidV1(),
+    personRef,
+    practicesRefs: Array<number>,
+    addressesRefs: Array<number>,
+    NPI: string,
+    bio: string,
+    providerType: enum,
+    specialties: Arrray<enum>,
+    acceptedInsurance: Array<enum>,
+    ageSpecialties: Arrray<enum>,
+    languages: Arrray<enum>,
+    licenseNumber: string,
+    licenseExpirationDate: string,
+    tier: number,
+    includeInSmartMatch: boolean,
+    isQHVerified: boolean,
+    acceptedTOSVersion: string,
+    acceptedInsurancePlansRef: number
+  });
+
+}
+
 const generateAppAcct = (appName) => {
   const emailRef = generateEmail(username, appName);
   const personRef = generatePerson(emailRef, appName);
   generateAccount(emailRef, personRef);
 
-  // switch (appName) {
-  //   case 'bhp':
-  //     generateBhp(personRef);
-  //     break;
-  //   case 'pcp':
-  //     generatePcp(personRef);
-  //     break;
-  //   case 'patient':
-  //     generatePatient(personRef);
-  //     break;
-  // }
+  switch (appName) {
+    case 'bhp':
+      generateBhp(personRef);
+      break;
+    case 'pcp':
+      generatePcp(personRef);
+      break;
+    case 'patient':
+      generatePatient(personRef);
+      break;
+  }
 
   return;
 }

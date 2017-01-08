@@ -26,3 +26,101 @@ export type accountLogin = {
   accountRef: number,
   clientId: string
 }
+
+export type behavioralProvider = {
+  dbId: number,
+  quartetId: string,
+  personRef: number,
+  practicesRefs: Array<number>,
+  addressesRefs: Array<number>,
+  NPI: string,
+  bio: string,
+  providerType: enum,
+  specialties: Arrray<enum>,
+  acceptedInsurance: Array<enum>,
+  ageSpecialties: Arrray<enum>,
+  languages: Arrray<enum>,
+  licenseNumber: string,
+  licenseExpirationDate: string,
+  tier: number,
+  includeInSmartMatch: boolean,
+  isQHVerified: boolean,
+  acceptedTOSVersion: string,
+  acceptedInsurancePlansRef: number
+}
+
+export type medicalProvider = {
+  dbId: number,
+  quartetId: string,
+  personRef: number,
+  NPI: string,
+  practicesRefs: Array<number>,
+  addressesRefs: Array<number>
+}
+
+export type patient = {
+  dbId: number,
+  quartetId: string,
+  personRef: number,
+  memberId: string,
+  primaryInsurancePlanRef: number,
+  secondaryInsurancePlanRef: number,
+  conditions: Array<enum>
+}
+
+
+export type serviceRequest = {
+  dbId: number,
+  quartetId: string,
+  patientRef: number,
+  QHOpsOwnerRef: number,
+  requestingMedicalProviderRef: number,
+  state: enum,
+  smartMatchesRefs: Array<number>,
+  notes: string,
+  memosRefs: Array<number>,
+  needsMedicationManagement: enum,
+  isRequestingCurbsideNote: boolean
+}
+
+export type serviceRequestMemo = {
+  dbId: number,
+  quartetId: string,
+  note: string
+}
+
+
+export type referral = {
+  dbId: number,
+  quartetId: string,
+  patientRef: number,
+  medicalProviderRef: number,
+  behavioralProviderRef: number,
+  state: enum,
+  serviceRequestRef: number,
+  medicalProviderNotes: string,
+  workflowKey: string,
+  apptWorkflowKey: string
+}
+
+export type appointment = {
+  dbId: number,
+  quartetId: string,
+  patientRef: number,
+  medicalProviderRef: number,
+  behavioralProviderRef: number,
+  state: enum,
+  startTime: string,
+  referralRef: number,
+  serviceRequestRef: number,
+  workflowKey: string,
+  hasAttended: boolean
+}
+
+
+export type note = {
+  dbId: number,
+  quartetId: string,
+  authorRef: number,
+  text: string
+}
