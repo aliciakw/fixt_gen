@@ -4,6 +4,8 @@
   "description": "\"Generate Moyo fixtures file with Javascript\"",
   "main": "index.js",
   "scripts": {
+    "gen": "./node_modules/.bin/babel src -d dist && node dist/index.js && cat fixtures.edn",
+    "babel-version": "babel --version",
     "test": "npm run test"
   },
   "author": "",
@@ -13,6 +15,9 @@
     "uuid": "^3.0.1"
   },
   "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-core": "^6.21.0",
+    "babel-preset-es2015": "^6.18.0",
     "flow-bin": "^0.37.4"
   }
 }
