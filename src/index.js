@@ -12,7 +12,7 @@ import personEnums from './person-enums';
 import referralEnums from './referral-enums';
 import stateEnums from './us-state-enums';
 
-const username = process.argv[2] || 'test';
+const username = process.argv[2] || 'dev';
 
 const emailAt = '@quartethealth.com',
       apps = ['bhp', 'admin', 'pcp', 'patient'],
@@ -34,7 +34,8 @@ const models = {
         'patient': [],
         'practice': [],
         'address': [],
-        'quartetRegion': []
+        'quartetRegion': [],
+        'serviceRequest': []
       };
 
 const getDbId = () => {
@@ -250,6 +251,24 @@ const generateAppAcct = (appName) => {
   return;
 }
 
+const generateSR = (patientRef, requestingMedicalProviderRef) => {
+  const dbId = getDbId();
+  models['serviceRequest'].push({
+    dbId,
+    quartetId: uuidV1(),
+    patientRef,
+    //QHOpsOwnerRef: number,
+    requestingMedicalProviderRef,
+    state: 'serviceRequest.state/created',
+    //smartMatchesRefs: Array<number>,
+    notes: 'This is a new serviceRequest',
+    needsMedicationManagement: 'serviceRequest.needsMedicationManagement/no',
+    isRequestingCurbsideNote: false
+  });
+};
+
+
+
 const bulkGenerate = (objType, times) => {
   let emailRef, personRef, generate;
   switch (objType) {
@@ -367,6 +386,13 @@ bulkGenerate('patient', 3);
 // additional bhps
 bulkGenerate('bhp', 3);
 
+
+models['behavioralProvider'].forEach(bhp => {
+  const bhpId = bhp.dbId;
+  models['patient'].forEach(patient => {
+    generateSR(patient.dbId, models['medicalProvider'][0].dbId);
+  });
+});
 
 
 generateFinalFixtures();
