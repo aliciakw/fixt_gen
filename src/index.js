@@ -250,12 +250,35 @@ const generateAppAcct = (appName) => {
   return;
 }
 
+const bulkGenerate = (objType, times) => {
+  let emailRef, personRef, generate;
+  switch (objType) {
+    case 'patient':
+      generate = () => {
+        emailRef = generateEmail('patient' + i);
+        personRef = generatePerson(emailRef, 'patient');
+        generatePatient(personRef);
+      };
+      break;
+    case 'bhp':
+      generate = () => {
+        emailRef = generateEmail('patient' + i);
+        personRef = generatePerson(emailRef, 'patient');
+        generateBhp(personRef);
+      };
+      break;
+  }
+
+  for (var i = 1; i <= times; i++) {
+    generate();
+  }
+}
+
 const generateAppAccounts = () => {
   apps.forEach(appName => {
     generateAppAcct(appName);
   });
 };
-
 
 
 //                             //
@@ -279,7 +302,7 @@ const assignInstAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' #in
 const assignRefAttr = (model, attr, val) => {
   return '\n :' + model.replace('Ref', '') + '/' + attr + ' #db/id[:db.part/user -' + val + ']';
 }
-const assignNumberAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' ' + val;
+const assignAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' ' + val;
 const assignStringAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' \"' + val + '\"';
 
 const printAttrAsEdn = (model, attr, data) => {
@@ -295,8 +318,8 @@ const printAttrAsEdn = (model, attr, data) => {
     return assignRefAttr(model, attr, data);
   } else if (dateInstRegex.test(data)) {
     return assignInstAttr(model, attr, data);
-  } else if (typeof data === 'number') {
-    return assignNumberAttr(model, attr, data);
+  } else if (typeof data === 'number' || typeof data === 'boolean' ) {
+    return assignAttr(model, attr, data);
   } else {
     return assignStringAttr(model, attr, data);
   }
@@ -339,13 +362,10 @@ const modelNames = Object.keys(models);
 providerEnums.regions.forEach(region => generateRegion(region));
 generateAppAccounts();
 
-let emailRef, personRef;
 // additional patients
-for (var i = 1; i <= 3; i++) {
-  emailRef = generateEmail('patient' + i);
-  personRef = generatePerson(emailRef, 'patient');
-  generatePerson(personRef);
-}
+bulkGenerate('patient', 3);
+// additional bhps
+bulkGenerate('bhp', 3);
 
 
 
