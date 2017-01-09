@@ -14,4 +14,10 @@ const lastNames = [
   'Frizzle', 'Kamath', 'Seinfeld'
 ];
 
-export default { firstNames, lastNames };
+const bios = [
+  'I am an LCSW that specializes in treating work-related depression and anxiety.',
+  'I am a psychoanalyst. I love Freud and have a sick couch. Lets talk about your repressed childhood.',
+  'I am a drug and alcohol counselor that specializes in working with veterans.'
+];
+
+export default { firstNames, lastNames, bios };

@@ -4,7 +4,7 @@ const uuidV1 = require('uuid/v1');
 const fs = require('fs');
 
 const fixt_file = fs.createWriteStream(__dirname + '/../fixtures.edn', {flags : 'w'});
-import names from './names';
+import text from './text';
 
 // utilize enums endpoint if one becomes available
 import providerEnums from './provider-enums';
@@ -35,18 +35,29 @@ const getDbId = () => {
   dbIndex++;
   return dbId;
 };
-const pickRandom = (arr) => {
+const pickRandom = arr => {
   if (arr) {
     const position = Math.ceil(arr.length * Math.random()) - 1;
     return arr[position];
   }
 };
+
+const pickRandomGroup = (arr, max) => {
+  let groupSize = Math.ceil(Math.random() * max);
+  let pick, randomGroup = [];
+  for (var i = 0; i < groupSize; i++) {
+    pick = pickRandom(arr);
+    arr.splice(arr.indexOf(pick), 1);
+    randomGroup.push(pick);
+  }
+  return randomGroup;
+};
 const randomName = () => {
-  const first = pickRandom(names.first);
-  const last = pickRandom(names.last);
+  const first = pickRandom(text.firstNames);
+  const last = pickRandom(text.lastNames);
   return first + ' ' + last;
 };
-
+const randomDigit = () => Math.floor(Math.random() * 10);
 
 //                            //
 //        create data         //
@@ -66,13 +77,15 @@ function generateEmail (username, label='') {
 
 const generatePerson = (emailRef, appName) => {
   const dbId = getDbId();
-  models['person'].push({
+  const person = {
     dbId,
     quartetId: uuidV1(),
     emailRef,
     fullName: randomName(),
-    roles: '[:person.role/' + abbrevs[appName] + ']'
-  });
+    roles: [('person.role/' + abbrevs[appName])]
+  };
+
+  models['person'].push(person);
 
   return dbId
 }
@@ -103,29 +116,33 @@ const generateAccount = (emailRef, personRef) => {
   return;
 }
 
-const generateBhp = (personRef) => {
+const makeNPI = () => new Array(10).fill(1).map(i => randomDigit()).toString().replace(/\,/g, '');
+const generateBhp = personRef => {
   const dbId = getDbId();
-  models['behavioralProvider'].push({
+
+  const bhp = {
     dbId,
     quartetId: uuidV1(),
     personRef,
     // practicesRefs: Array<number>,
     // addressesRefs: Array<number>,
-    // NPI: string,
-    // bio: string,
-    // providerType: enum,
-    // specialties: Arrray<enum>,
-    // acceptedInsurance: Array<enum>,
-    // ageSpecialties: Arrray<enum>,
-    // languages: Arrray<enum>,
-    // licenseNumber: string,
-    // licenseExpirationDate: string,
-    // tier: number,
-    // includeInSmartMatch: boolean,
-    // isQHVerified: boolean,
-    // acceptedTOSVersion: string,
+    NPI: makeNPI(),
+    bio: pickRandom(text.bios),
+    providerType: pickRandom(providerEnums.providerTypes),
+    specialties: pickRandomGroup(providerEnums.conditions, 3),
+    acceptedInsurance: pickRandomGroup(providerEnums.insurances, 5),
+    ageSpecialties: pickRandomGroup(providerEnums.ageSpecialties, 2),
+    languages: pickRandomGroup(providerEnums.languages, 3),
+    licenseNumber: '1234-567-89000',
+    licenseExpirationDate: '2020-01-01T00:00:00.000',
+    tier: Math.ceil(Math.random() * 3),
+    includeInSmartMatch: true,
+    isQHVerified: true,
+    acceptedTOSVersion: '0.0.0',
     // acceptedInsurancePlansRef: number
-  });
+  };
+
+  models['behavioralProvider'].push(bhp);
 
 }
 
@@ -133,6 +150,10 @@ const generateAppAcct = (appName) => {
   const emailRef = generateEmail(username, appName);
   const personRef = generatePerson(emailRef, appName);
   generateAccount(emailRef, personRef);
+
+  if (appName === 'bhp') {
+    generateBhp(personRef);
+  }
 
   // switch (appName) {
   //   case 'bhp':
@@ -162,38 +183,52 @@ const generateAppAcct = (appName) => {
 const enums = ['roles'];
 const refRegex = /Ref/;
 const dateInstRegex = /\d{4}-\d{2}-\d{2}/;
+const enumRegex = /\w+\/\w+/;
 
 const assignDbId = (dbid) => ':db/id           #db/id[:db.part/user -'+ dbid +']';
 const assignUUIDAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' #uuid \"' + val + '\"';
-const assignEnumAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' ' + val ;
+const assignEnumAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' :' + val ;
+const assignMultiEnumAttr = (model, attr, val) => {
+  let ednVal = val.map(i => ':' + i).toString().replace(/\,/g, ' ');
+  return '\n :' + model + '/' + attr + ' [' + ednVal + ']';
+}
 const assignInstAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' #inst \"' + val + '\"';
 const assignRefAttr = (model, attr, val) => {
   return '\n :' + model.replace('Ref', '') + '/' + attr + ' #db/id[:db.part/user -' + val + ']';
 }
+const assignNumberAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' ' + val;
 const assignStringAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' \"' + val + '\"';
 
-
+const printAttrAsEdn = (model, attr, data) => {
+  if (attr === 'dbId') {
+    return assignDbId(data);
+  } else if (attr === 'quartetId') {
+    return assignUUIDAttr(model, attr, data);
+  } else if (typeof data === 'object' && enumRegex.test(data)) {
+    return assignMultiEnumAttr(model, attr, data);
+  } else if (enumRegex.test(data)) {
+    return assignEnumAttr(model, attr, data);
+  } else if (refRegex.test(attr)) {
+    return assignRefAttr(model, attr, data);
+  } else if (dateInstRegex.test(data)) {
+    return assignInstAttr(model, attr, data);
+  } else if (typeof data === 'number') {
+    return assignNumberAttr(model, attr, data);
+  } else {
+    return assignStringAttr(model, attr, data);
+  }
+  return '';
+}
 
 let edn;
 const recordAsEdn = (model, record) => {
   const attributes = Object.keys(record);
-  edn = '{'
+  edn = '{';
 
   attributes.forEach(attr => {
-    if (attr === 'dbId') {
-      edn += assignDbId(record[attr]);
-    } else if (attr === 'quartetId') {
-      edn += assignUUIDAttr(model, attr, record[attr]);
-    } else if (enums.indexOf(attr) >= 0) {
-      edn += assignEnumAttr(model, attr, record[attr]);
-    } else if (refRegex.test(attr)) {
-      edn += assignRefAttr(model, attr, record[attr]);
-    } else if (dateInstRegex.test(record[attr])) {
-      edn += assignInstAttr(model, attr, record[attr]);
-    } else {
-      edn += assignStringAttr(model, attr, record[attr]);
-    }
+    edn += printAttrAsEdn(model, attr, record[attr]);
   });
+
   return edn + '}\n';
 }
 

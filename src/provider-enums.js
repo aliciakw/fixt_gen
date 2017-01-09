@@ -315,9 +315,9 @@ const providerTypes = {
 };
 
 export default {
-  ageSpecialties,
-  conditions,
-  insurances,
-  languages,
-  providerTypes
+  ageSpecialties: Object.keys(ageSpecialties),
+  conditions: Object.keys(conditions),
+  insurances: Object.keys(insurances),
+  languages: Object.keys(languages),
+  providerTypes: Object.keys(providerTypes)
 };
