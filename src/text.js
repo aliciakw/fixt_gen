@@ -1,7 +1,7 @@
 const firstNames = [
   'Vladimir', 'Barack', 'Hillary', 'Donald', 'Johnny', 'Ben', 'Anna', 'Linda', 'Skye',
   'Patricia', 'Ilya', 'Caroline', 'Scarlett', 'Cassandra', 'Abraham', 'Lianne', 'Edith', 'Mikayla', 'Beth',
-  'Maria', 'Lorena', 'Carlos', 'Dominique', 'Antonio', 'Chanellle', 'Tobias', 'Tyler', 'Gabiela', 'Supatra',
+  'Maria', 'Lorena', 'Carlos', 'Dominique', 'Antonio', 'Chanelle', 'Tobias', 'Tyler', 'Gabiela', 'Supatra',
   'Allison', 'Alicia', 'Kate', 'Ruby', 'Gabe', 'Sigourney', 'Brian', 'Paul', 'Juno', 'Adam', 'Avindra', 'Efren',
   'Mustafa', 'Ian', 'Arun', 'Nyala', 'Scooby', 'Homer'
 ];

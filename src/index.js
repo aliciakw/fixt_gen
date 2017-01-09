@@ -1,10 +1,9 @@
-import babel from 'babel-core';
+import "babel-core";
 
-const uuidV1 = require('uuid/v1');
-const fs = require('fs');
+import uuidV4 from 'uuid/v4';
+import generateFinalFixtures from './ednize';
 
-const fixt_file = fs.createWriteStream(__dirname + '/../fixtures.edn', {flags : 'w'});
-import text from './text';
+import { firstNames, lastNames, bios, streets, cities, practiceNames } from './text';
 
 // utilize enums endpoint if one becomes available
 import providerEnums from './provider-enums';
@@ -21,9 +20,8 @@ const emailAt = '@quartethealth.com',
         pcp: 'medicalProvider',
         admin: 'admin',
         patient: 'patient'
-};
-
-const models = {
+      },
+      models = {
         'email': [],
         'person': [],
         'account': [],
@@ -35,14 +33,17 @@ const models = {
         'practice': [],
         'address': [],
         'quartetRegion': [],
-        'serviceRequest': []
+        'serviceRequest': [],
+        'referral': []
       };
 
+let dbIndex = 1;
 const getDbId = () => {
   const dbId = dbIndex;
   dbIndex++;
   return dbId;
 };
+
 const pickRandom = arr => {
   if (arr) {
     const position = Math.ceil(arr.length * Math.random()) - 1;
@@ -60,9 +61,10 @@ const pickRandomGroup = (arr, max) => {
   }
   return randomGroup;
 };
+
 const randomName = () => {
-  const first = pickRandom(text.firstNames);
-  const last = pickRandom(text.lastNames);
+  const first = pickRandom(firstNames);
+  const last = pickRandom(lastNames);
   return first + ' ' + last;
 };
 const randomDigit = () => Math.floor(Math.random() * 10);
@@ -70,16 +72,16 @@ const randomNumberString = len => new Array(len).fill(1).map(i => randomDigit())
 
 
 
-//                            //
-//        create data         //
-//                            //
+//                                    //
+//            create data             //
+//                                    //
 
 const generateEmail = (username, label='') => {
   if (label) { label = '+' + label; }
   const dbId = getDbId();
   models['email'].push ({
     dbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     address: username + label + emailAt
   });
 
@@ -90,7 +92,7 @@ const generatePerson = (emailRef, appName) => {
   const dbId = getDbId();
   models['person'].push({
     dbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     emailRef,
     fullName: randomName(),
     gender: pickRandom(personEnums.genders),
@@ -104,7 +106,7 @@ const generateRegion = name => {
   const dbId = getDbId();
   models['quartetRegion'].push({
     dbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     name
   });
   return dbId;
@@ -114,9 +116,9 @@ const generateAddress = () => {
   const dbId = getDbId();
   models['address'].push({
     dbId,
-    quartetId: uuidV1(),
-    city: pickRandom(text.cities),
-    lineOne: Math.ceil(Math.random() * 1000).toString() + ' ' + pickRandom(text.streets),
+    quartetId: uuidV4(),
+    city: pickRandom(cities),
+    lineOne: Math.ceil(Math.random() * 1000).toString() + ' ' + pickRandom(streets),
     state: pickRandom(Object.keys(stateEnums))
   });
   return dbId;
@@ -126,9 +128,9 @@ const generatePractice = addressRef => {
   const dbId = getDbId();
   models['practice'].push({
     dbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     NPI: randomNumberString(5),
-    name: pickRandom(text.practiceNames),
+    name: pickRandom(practiceNames),
     addresses: [addressRef],
     //quartetRegion: number
   });
@@ -137,14 +139,16 @@ const generatePractice = addressRef => {
 
 const password = 'pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM=',
       collabRegistrationInst = '2015-06-06T15:31:29.331',
-      clientId = 'fancy_and_definitely_real_client_id';
+      clientId = 'fancy_and_definitely_real_client_id',
+      workflowKey = 'fake|||workflow|||key',
+      apptWorkflowKey = 'fake|||apptWorkflowKey|||key';
 
 const generateAccount = (emailRef, personRef) => {
   const accountDbId = getDbId();
   const accountLoginDbId = getDbId();
   models['account'].push({
     dbId: accountDbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     password,
     emailRef,
     personRef,
@@ -153,7 +157,7 @@ const generateAccount = (emailRef, personRef) => {
 
   models['account.login'].push({
     dbId: accountLoginDbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     accountRef: accountDbId,
     clientId
   });
@@ -168,12 +172,12 @@ const generateBhp = personRef => {
 
   models['behavioralProvider'].push({
     dbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     personRef,
     addressesRefs: [addressRef],
     practicesRefs: [practiceRef],
     NPI: randomNumberString(10),
-    bio: pickRandom(text.bios),
+    bio: pickRandom(bios),
     providerType: pickRandom(providerEnums.providerTypes),
     specialties: pickRandomGroup(providerEnums.conditions, 3),
     acceptedInsurance: pickRandomGroup(providerEnums.insurances, 5),
@@ -197,7 +201,7 @@ const generatePcp = (personRef, accountRef) => {
 
   models['medicalProvider'].push({
     dbId: pcpDbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     personRef,
     NPI: randomNumberString(10),
     addressesRefs: [addressRef],
@@ -206,7 +210,7 @@ const generatePcp = (personRef, accountRef) => {
 
   models['app.PCP.userProfile'].push({
     dbId: userProfileDbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     accountRef,
     practiceRef,
     isAdmin: true,
@@ -220,7 +224,7 @@ const generatePatient = personRef => {
   const addressRef = generateAddress();
   models['patient'].push({
     dbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     personRef,
     addressRef,
     memberId: randomNumberString(5),
@@ -251,20 +255,38 @@ const generateAppAcct = (appName) => {
   return;
 }
 
-const generateSR = (patientRef, requestingMedicalProviderRef) => {
+const generateSR = (patientRef, requestingMedicalProviderRef, state) => {
   const dbId = getDbId();
   models['serviceRequest'].push({
     dbId,
-    quartetId: uuidV1(),
+    quartetId: uuidV4(),
     patientRef,
     //QHOpsOwnerRef: number,
     requestingMedicalProviderRef,
-    state: 'serviceRequest.state/created',
+    state,
     //smartMatchesRefs: Array<number>,
     notes: 'This is a new serviceRequest',
     needsMedicationManagement: 'serviceRequest.needsMedicationManagement/no',
     isRequestingCurbsideNote: false
   });
+  return dbId;
+};
+
+const generateReferral = (patientRef, requestingMedicalProviderRef, serviceRequestRef, behavioralProviderRef) => {
+  const dbId = getDbId();
+  models['referral'].push({
+    dbId,
+    quartetId: uuidV4(),
+    patientRef,
+    requestingMedicalProviderRef,
+    behavioralProviderRef,
+    state: 'pendingProviderResponse',
+    serviceRequestRef,
+    medicalProviderNotes: 'Some notes from the PCP',
+    workflowKey,
+    apptWorkflowKey
+  });
+  return dbId;
 };
 
 
@@ -299,81 +321,6 @@ const generateAppAccounts = () => {
   });
 };
 
-
-//                             //
-//        write as edn         //
-//                             //
-
-// helpers
-const enums = ['roles'];
-const refRegex = /Ref/;
-const dateInstRegex = /\d{4}-\d{2}-\d{2}/;
-const enumRegex = /\w+\/\w+/;
-
-const assignDbId = (dbid) => ':db/id           #db/id[:db.part/user -'+ dbid +']';
-const assignUUIDAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' #uuid \"' + val + '\"';
-const assignEnumAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' :' + val ;
-const assignMultiEnumAttr = (model, attr, val) => {
-  let ednVal = val.map(i => ':' + i).toString().replace(/\,/g, ' ');
-  return '\n :' + model + '/' + attr + ' [' + ednVal + ']';
-}
-const assignInstAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' #inst \"' + val + '\"';
-const assignRefAttr = (model, attr, val) => {
-  return '\n :' + model.replace('Ref', '') + '/' + attr + ' #db/id[:db.part/user -' + val + ']';
-}
-const assignAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' ' + val;
-const assignStringAttr = (model, attr, val) => '\n :' + model + '/' + attr + ' \"' + val + '\"';
-
-const printAttrAsEdn = (model, attr, data) => {
-  if (attr === 'dbId') {
-    return assignDbId(data);
-  } else if (attr === 'quartetId') {
-    return assignUUIDAttr(model, attr, data);
-  } else if (typeof data === 'object' && enumRegex.test(data)) {
-    return assignMultiEnumAttr(model, attr, data);
-  } else if (enumRegex.test(data)) {
-    return assignEnumAttr(model, attr, data);
-  } else if (refRegex.test(attr)) {
-    return assignRefAttr(model, attr, data);
-  } else if (dateInstRegex.test(data)) {
-    return assignInstAttr(model, attr, data);
-  } else if (typeof data === 'number' || typeof data === 'boolean' ) {
-    return assignAttr(model, attr, data);
-  } else {
-    return assignStringAttr(model, attr, data);
-  }
-  return '';
-}
-
-let edn;
-const recordAsEdn = (model, record) => {
-  const attributes = Object.keys(record);
-  edn = '{';
-
-  attributes.forEach(attr => {
-    edn += printAttrAsEdn(model, attr, record[attr]);
-  });
-
-  return edn + '}\n';
-}
-
-let data;
-const generateFinalFixtures = () => {
-  modelNames.forEach((modelName) => {
-    data = models[modelName];
-    fixt_file.write(';; ' + modelName + 's \n');
-    data.forEach(record => {
-      fixt_file.write(recordAsEdn(modelName, record));
-    });
-    fixt_file.write('\n');
-  });
-};
-
-const finalFixtures = [];
-let dbIndex = 1;
-const modelNames = Object.keys(models);
-
-
 //                             //
 //           execute           //
 //                             //
@@ -389,12 +336,18 @@ bulkGenerate('bhp', 3);
 
 models['behavioralProvider'].forEach(bhp => {
   const bhpId = bhp.dbId;
-  models['patient'].forEach(patient => {
-    generateSR(patient.dbId, models['medicalProvider'][0].dbId);
+  models['patient'].forEach((patient, i) => {
+    if (i % 2) {
+      const srId = generateSR(patient.dbId, models['medicalProvider'][0].dbId, 'serviceRequest.state/matched');
+      generateReferral(patient.dbId, models['medicalProvider'][0].dbId, srId);
+    } else {
+      generateSR(patient.dbId, models['medicalProvider'][0].dbId, 'serviceRequest.state/created');
+    }
+
   });
 });
 
 
-generateFinalFixtures();
+generateFinalFixtures(models);
 
 console.log('done.');
