@@ -1,18 +1,28 @@
 import "babel-core";
-
 import uuidV4 from 'uuid/v4';
-import generateFinalFixtures from './ednize';
 
-import { firstNames, lastNames, bios, streets, cities, practiceNames } from './text';
+import {
+  pickRandom,
+  pickRandomGroup,
+  randomDigit,
+  randomNumberString,
+  randomName
+} from './randomizers'
+import generateFinalFixtures from './ednize';
 
 // utilize enums endpoint if one becomes available
 import providerEnums from './provider-enums';
 import personEnums from './person-enums';
 import referralEnums from './referral-enums';
 import stateEnums from './us-state-enums';
+import { firstNames, lastNames, bios, streets, cities, practiceNames } from './text';
 
+//
+// constants
+//
+
+let dbIndex = 1;
 const username = process.argv[2] || 'dev';
-
 const emailAt = '@quartethealth.com',
       apps = ['bhp', 'admin', 'pcp', 'patient'],
       abbrevs = {
@@ -37,44 +47,15 @@ const emailAt = '@quartethealth.com',
         'referral': []
       };
 
-let dbIndex = 1;
+//
+// generators
+//
+
 const getDbId = () => {
   const dbId = dbIndex;
   dbIndex++;
   return dbId;
 };
-
-const pickRandom = arr => {
-  if (arr) {
-    const position = Math.ceil(arr.length * Math.random()) - 1;
-    return arr[position];
-  }
-};
-
-const pickRandomGroup = (arr, max) => {
-  let groupSize = Math.ceil(Math.random() * max);
-  let pick, randomGroup = [];
-  for (var i = 0; i < groupSize; i++) {
-    pick = pickRandom(arr);
-    arr.splice(arr.indexOf(pick), 1);
-    randomGroup.push(pick);
-  }
-  return randomGroup;
-};
-
-const randomName = () => {
-  const first = pickRandom(firstNames);
-  const last = pickRandom(lastNames);
-  return first + ' ' + last;
-};
-const randomDigit = () => Math.floor(Math.random() * 10);
-const randomNumberString = len => new Array(len).fill(1).map(i => randomDigit()).toString().replace(/\,/g, '');
-
-
-
-//                                    //
-//            create data             //
-//                                    //
 
 const generateEmail = (username, label='') => {
   if (label) { label = '+' + label; }
@@ -94,7 +75,7 @@ const generatePerson = (emailRef, appName) => {
     dbId,
     quartetId: uuidV4(),
     emailRef,
-    fullName: randomName(),
+    fullName: randomName(firstNames, lastNames),
     gender: pickRandom(personEnums.genders),
     phoneNumber: randomNumberString(10),
     roles: [('person.role/' + abbrevs[appName])]
@@ -289,8 +270,6 @@ const generateReferral = (patientRef, requestingMedicalProviderRef, serviceReque
   return dbId;
 };
 
-
-
 const bulkGenerate = (objType, times) => {
   let emailRef, personRef, generate;
   switch (objType) {
@@ -321,9 +300,11 @@ const generateAppAccounts = () => {
   });
 };
 
-//                             //
-//           execute           //
-//                             //
+
+
+//
+// generate the data already!
+//
 
 providerEnums.regions.forEach(region => generateRegion(region));
 generateAppAccounts();
@@ -332,7 +313,6 @@ generateAppAccounts();
 bulkGenerate('patient', 3);
 // additional bhps
 bulkGenerate('bhp', 3);
-
 
 models['behavioralProvider'].forEach(bhp => {
   const bhpId = bhp.dbId;
@@ -346,7 +326,6 @@ models['behavioralProvider'].forEach(bhp => {
 
   });
 });
-
 
 generateFinalFixtures(models);
 
