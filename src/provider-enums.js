@@ -314,10 +314,36 @@ const providerTypes = {
   "providerType/treatmentFacility": "Treatment Facility"
 };
 
+const pcpPermissions = [
+  "app.PCP.userProfile.permissions/canViewBHData",
+  "app.PCP.userProfile.permissions/canViewReferralDetails",
+  "app.PCP.userProfile.permissions/canCreateNewCurbside",
+  "app.PCP.userProfile.permissions/canCreateNewReferral",
+  "app.PCP.userProfile.permissions/canLoginPCPApp",
+  "app.PCP.userProfile.permissions/canApproveMySuggestedPatients",
+];
+
+const practiceTitle = [
+  'app.PCP.userProfile.practiceTitle/primaryCarePhysician',
+  'app.PCP.userProfile.practiceTitle/nursePractitioner',
+  'app.PCP.userProfile.practiceTitle/officeManager',
+  'app.PCP.userProfile.practiceTitle/caseManager',
+  'app.PCP.userProfile.practiceTitle/physiciansAssistant',
+  'app.PCP.userProfile.practiceTitle/medicalAssistant',
+  'app.PCP.userProfile.practiceTitle/socialWorker'
+];
+
+const regions = ['MA', 'PA', 'WA'];
+
+
+
 export default {
   ageSpecialties: Object.keys(ageSpecialties),
   conditions: Object.keys(conditions),
   insurances: Object.keys(insurances),
   languages: Object.keys(languages),
-  providerTypes: Object.keys(providerTypes)
+  providerTypes: Object.keys(providerTypes),
+  pcpPermissions: pcpPermissions,
+  practiceTitle: practiceTitle,
+  regions: regions
 };

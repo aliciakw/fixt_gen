@@ -20,4 +20,8 @@ const bios = [
   'I am a drug and alcohol counselor that specializes in working with veterans.'
 ];
 
-export default { firstNames, lastNames, bios };
+const streets = [ 'Liberty Square', 'Green Street', 'Federal Street', 'Asphalt Avenue' ];
+const cities = ['Pittsburgh', 'Boston', 'Seattle'];
+const practiceNames = ['Washington Presbyterian', 'Evergreen Health Center', 'Downtown Mental Health Servies', 'Eastern Medical', 'Pittsburgh University Hospital'];
+
+export default { firstNames, lastNames, bios, streets, cities, practiceNames };

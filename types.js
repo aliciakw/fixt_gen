@@ -9,7 +9,27 @@ export type person = {
   quartetId: string,
   emailRef: number,
   fullName: string,
+  gender: enum,
+  phoneNumber: string,
   roles: string
+}
+
+export type address = {
+  dbId: number,
+  quartetId: string,
+  city: string,
+  lineOne: string,
+  lineTwo: string,
+  state: enum
+}
+
+export type practice = {
+  dbId: number,
+  quartetId: string,
+  NPI: string,
+  name: string,
+  addresses: Array<number>,
+  quartetRegion: number
 }
 
 export type account = {
@@ -58,11 +78,22 @@ export type medicalProvider = {
   addressesRefs: Array<number>
 }
 
+export type appPCPuserProfile = {
+  dbId: number,
+  quartetId: string,
+  accountRef: number,
+  practiceRef: number,
+  isAdmin: boolean,
+  practiceTitle: enum,
+  permissions: Array<enum>
+};
+
 export type patient = {
   dbId: number,
   quartetId: string,
   personRef: number,
   memberId: string,
+  address: string,
   primaryInsurancePlanRef: number,
   secondaryInsurancePlanRef: number,
   conditions: Array<enum>

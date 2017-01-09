@@ -6,5 +6,5 @@ const genders = {
 };
 
 export default {
-  genders
+  genders: Object.keys(genders)
 }

@@ -8,11 +8,14 @@ import text from './text';
 
 // utilize enums endpoint if one becomes available
 import providerEnums from './provider-enums';
+import personEnums from './person-enums';
+import referralEnums from './referral-enums';
+import stateEnums from './us-state-enums';
 
 const username = process.argv[2] || 'test';
 
 const emailAt = '@quartethealth.com',
-      apps = ['bhp', 'admin', 'pcp'],
+      apps = ['bhp', 'admin', 'pcp', 'patient'],
       abbrevs = {
         bhp: 'behavioralHealthProvider',
         pcp: 'medicalProvider',
@@ -27,7 +30,11 @@ const models = {
         'account.login': [],
         'behavioralProvider': [],
         'medicalProvider': [],
-        'patient': []
+        'app.PCP.userProfile': [],
+        'patient': [],
+        'practice': [],
+        'address': [],
+        'quartetRegion': []
       };
 
 const getDbId = () => {
@@ -58,12 +65,15 @@ const randomName = () => {
   return first + ' ' + last;
 };
 const randomDigit = () => Math.floor(Math.random() * 10);
+const randomNumberString = len => new Array(len).fill(1).map(i => randomDigit()).toString().replace(/\,/g, '');
+
+
 
 //                            //
 //        create data         //
 //                            //
 
-function generateEmail (username, label='') {
+const generateEmail = (username, label='') => {
   if (label) { label = '+' + label; }
   const dbId = getDbId();
   models['email'].push ({
@@ -73,22 +83,56 @@ function generateEmail (username, label='') {
   });
 
   return dbId
-}
+};
 
 const generatePerson = (emailRef, appName) => {
   const dbId = getDbId();
-  const person = {
+  models['person'].push({
     dbId,
     quartetId: uuidV1(),
     emailRef,
     fullName: randomName(),
+    gender: pickRandom(personEnums.genders),
+    phoneNumber: randomNumberString(10),
     roles: [('person.role/' + abbrevs[appName])]
-  };
+  });
+  return dbId;
+};
 
-  models['person'].push(person);
+const generateRegion = name => {
+  const dbId = getDbId();
+  models['quartetRegion'].push({
+    dbId,
+    quartetId: uuidV1(),
+    name
+  });
+  return dbId;
+};
 
-  return dbId
-}
+const generateAddress = () => {
+  const dbId = getDbId();
+  models['address'].push({
+    dbId,
+    quartetId: uuidV1(),
+    city: pickRandom(text.cities),
+    lineOne: Math.ceil(Math.random() * 1000).toString() + ' ' + pickRandom(text.streets),
+    state: pickRandom(Object.keys(stateEnums))
+  });
+  return dbId;
+};
+
+const generatePractice = addressRef => {
+  const dbId = getDbId();
+  models['practice'].push({
+    dbId,
+    quartetId: uuidV1(),
+    NPI: randomNumberString(5),
+    name: pickRandom(text.practiceNames),
+    addresses: [addressRef],
+    //quartetRegion: number
+  });
+  return dbId;
+};
 
 const password = 'pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkIHU6WrtsZUBl1sM=',
       collabRegistrationInst = '2015-06-06T15:31:29.331',
@@ -113,20 +157,21 @@ const generateAccount = (emailRef, personRef) => {
     clientId
   });
 
-  return;
-}
+  return accountDbId;
+};
 
-const makeNPI = () => new Array(10).fill(1).map(i => randomDigit()).toString().replace(/\,/g, '');
 const generateBhp = personRef => {
   const dbId = getDbId();
+  const addressRef = generateAddress();
+  const practiceRef = generatePractice(addressRef);
 
-  const bhp = {
+  models['behavioralProvider'].push({
     dbId,
     quartetId: uuidV1(),
     personRef,
-    // practicesRefs: Array<number>,
-    // addressesRefs: Array<number>,
-    NPI: makeNPI(),
+    addressesRefs: [addressRef],
+    practicesRefs: [practiceRef],
+    NPI: randomNumberString(10),
     bio: pickRandom(text.bios),
     providerType: pickRandom(providerEnums.providerTypes),
     specialties: pickRandomGroup(providerEnums.conditions, 3),
@@ -140,44 +185,82 @@ const generateBhp = personRef => {
     isQHVerified: true,
     acceptedTOSVersion: '0.0.0',
     // acceptedInsurancePlansRef: number
-  };
-
-  models['behavioralProvider'].push(bhp);
-
+  });
 }
+
+const generatePcp = (personRef, accountRef) => {
+  const pcpDbId = getDbId();
+  const userProfileDbId = getDbId();
+  const addressRef = generateAddress();
+  const practiceRef = generatePractice(addressRef);
+
+  models['medicalProvider'].push({
+    dbId: pcpDbId,
+    quartetId: uuidV1(),
+    personRef,
+    NPI: randomNumberString(10),
+    addressesRefs: [addressRef],
+    practicesRefs: [practiceRef]
+  });
+
+  models['app.PCP.userProfile'].push({
+    dbId: userProfileDbId,
+    quartetId: uuidV1(),
+    accountRef,
+    practiceRef,
+    isAdmin: true,
+    practiceTitle: pickRandom(providerEnums.practiceTitle),
+    permissions: providerEnums.pcpPermissions
+  });
+};
+
+const generatePatient = personRef => {
+  const dbId = getDbId();
+  const addressRef = generateAddress();
+  models['patient'].push({
+    dbId,
+    quartetId: uuidV1(),
+    personRef,
+    addressRef,
+    memberId: randomNumberString(5),
+    //primaryInsurancePlanRef: number,
+    //secondaryInsurancePlanRef: number,
+    conditions: pickRandomGroup(providerEnums.conditions, 3)
+  });
+};
 
 const generateAppAcct = (appName) => {
   const emailRef = generateEmail(username, appName);
   const personRef = generatePerson(emailRef, appName);
-  generateAccount(emailRef, personRef);
+  const accountRef = generateAccount(emailRef, personRef);
+  let addressRef, practiceRef;
 
-  if (appName === 'bhp') {
-    generateBhp(personRef);
+  switch (appName) {
+    case 'bhp':
+      generateBhp(personRef, addressRef, practiceRef);
+      break;
+    case 'pcp':
+      generatePcp(personRef, accountRef);
+      break;
+    case 'patient':
+      generatePatient(personRef);
+      break;
   }
-
-  // switch (appName) {
-  //   case 'bhp':
-  //     generateBhp(personRef);
-  //     break;
-  //   case 'pcp':
-  //     generatePcp(personRef);
-  //     break;
-  //   case 'patient':
-  //     generatePatient(personRef);
-  //     break;
-  // }
 
   return;
 }
 
+const generateAppAccounts = () => {
+  apps.forEach(appName => {
+    generateAppAcct(appName);
+  });
+};
 
 
 
 //                             //
 //        write as edn         //
 //                             //
-
-
 
 // helpers
 const enums = ['roles'];
@@ -232,26 +315,40 @@ const recordAsEdn = (model, record) => {
   return edn + '}\n';
 }
 
+let data;
+const generateFinalFixtures = () => {
+  modelNames.forEach((modelName) => {
+    data = models[modelName];
+    fixt_file.write(';; ' + modelName + 's \n');
+    data.forEach(record => {
+      fixt_file.write(recordAsEdn(modelName, record));
+    });
+    fixt_file.write('\n');
+  });
+};
+
 const finalFixtures = [];
 let dbIndex = 1;
 const modelNames = Object.keys(models);
 
 
+//                             //
+//           execute           //
+//                             //
 
-apps.forEach(appName => {
-  generateAppAcct(appName);
-});
+providerEnums.regions.forEach(region => generateRegion(region));
+generateAppAccounts();
 
-let data;
-modelNames.forEach((modelName) => {
-  data = models[modelName];
-  fixt_file.write(';; ' + modelName + 's \n');
-  data.forEach(record => {
-    fixt_file.write(recordAsEdn(modelName, record));
-  });
-  fixt_file.write('\n');
-});
+let emailRef, personRef;
+// additional patients
+for (var i = 1; i <= 3; i++) {
+  emailRef = generateEmail('patient' + i);
+  personRef = generatePerson(emailRef, 'patient');
+  generatePerson(personRef);
+}
 
 
+
+generateFinalFixtures();
 
 console.log('done.');
