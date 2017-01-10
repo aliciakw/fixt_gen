@@ -287,6 +287,13 @@ const bulkGenerate = (objType, times) => {
         generateBhp(personRef);
       };
       break;
+    case 'pcp':
+      generate = () => {
+        emailRef = generateEmail('pcp' + i);
+        personRef = generatePerson(emailRef, 'pcp');
+        generatePcp(personRef);
+      };
+      break;
   }
 
   for (var i = 1; i <= times; i++) {
@@ -300,6 +307,20 @@ const generateAppAccounts = () => {
   });
 };
 
+const simulateReferralFlows = (bhpId, patients, pcps) => {
+  let pcpId;
+
+  patients.forEach((patient, i) => {
+    pcpId = pickRandom(pcps).dbId;
+    if (i % 2) {
+      const srId = generateSR(patient.dbId, pcpId, 'serviceRequest.state/matched');
+      generateReferral(patient.dbId, pcpId, srId, bhpId);
+    } else {
+      generateSR(patient.dbId, pcpId, 'serviceRequest.state/created');
+    }
+  });
+};
+
 
 
 //
@@ -309,23 +330,14 @@ const generateAppAccounts = () => {
 providerEnums.regions.forEach(region => generateRegion(region));
 generateAppAccounts();
 
-// additional patients
+bulkGenerate('pcp', 3);
 bulkGenerate('patient', 3);
-// additional bhps
 bulkGenerate('bhp', 3);
 
 models['behavioralProvider'].forEach(bhp => {
-  const bhpId = bhp.dbId;
-  models['patient'].forEach((patient, i) => {
-    if (i % 2) {
-      const srId = generateSR(patient.dbId, models['medicalProvider'][0].dbId, 'serviceRequest.state/matched');
-      generateReferral(patient.dbId, models['medicalProvider'][0].dbId, srId);
-    } else {
-      generateSR(patient.dbId, models['medicalProvider'][0].dbId, 'serviceRequest.state/created');
-    }
-
-  });
+  simulateReferralFlows(bhp.dbId, models['patient'], models['medicalProvider']);
 });
+
 
 generateFinalFixtures(models);
 
