@@ -57,13 +57,12 @@ const getDbId = () => {
   return dbId;
 };
 
-const generateEmail = (username, label='') => {
-  if (label) { label = '+' + label; }
+const generateEmail = (username) => {
   const dbId = getDbId();
   models['email'].push ({
     dbId,
     quartetId: uuidV4(),
-    address: username + label + emailAt
+    address: username + emailAt
   });
 
   return dbId
@@ -124,11 +123,14 @@ const password = 'pbkdf2_sha256$24000$5fCrzejhti9K$79XrYIq99uJgEpgxYhCypDCgyCfkI
       workflowKey = 'fake|||workflow|||key',
       apptWorkflowKey = 'fake|||apptWorkflowKey|||key';
 
-const generateAccount = (emailRef, personRef) => {
-  const accountDbId = getDbId();
+const generateAccount = (username, appName) => {
+  const emailRef = generateEmail(username);
+  const personRef = generatePerson(emailRef, appName);
+  const accountRef = getDbId();
   const accountLoginDbId = getDbId();
+
   models['account'].push({
-    dbId: accountDbId,
+    dbId: accountRef,
     quartetId: uuidV4(),
     password,
     emailRef,
@@ -139,11 +141,11 @@ const generateAccount = (emailRef, personRef) => {
   models['account.login'].push({
     dbId: accountLoginDbId,
     quartetId: uuidV4(),
-    accountRef: accountDbId,
+    accountRef: accountRef,
     clientId
   });
 
-  return accountDbId;
+  return { accountRef, emailRef, personRef };
 };
 
 const generateBhp = personRef => {
@@ -216,10 +218,10 @@ const generatePatient = personRef => {
 };
 
 const generateAppAcct = (appName) => {
-  const emailRef = generateEmail(username, appName);
-  const personRef = generatePerson(emailRef, appName);
-  const accountRef = generateAccount(emailRef, personRef);
   let addressRef, practiceRef;
+  const { accountRef,
+          emailRef,
+          personRef } = generateAccount(`${username}+${appName}`, appName);
 
   switch (appName) {
     case 'bhp':
@@ -270,33 +272,40 @@ const generateReferral = (patientRef, requestingMedicalProviderRef, serviceReque
   return dbId;
 };
 
+const nextObjectNumber = (objType) => {
+  try {
+    return (models[objType].length)
+  } catch (e) {
+    return randomNumberString(4);
+  }
+};
+
 const bulkGenerate = (objType, times) => {
-  let emailRef, personRef, generate;
+  let generate, emailRef, personRef;
+
   switch (objType) {
     case 'patient':
       generate = () => {
-        emailRef = generateEmail('patient' + i);
-        personRef = generatePerson(emailRef, 'patient');
+        const { personRef } = generateAccount(`${objType}+${nextObjectNumber(objType)}`, objType);
         generatePatient(personRef);
       };
       break;
     case 'bhp':
       generate = () => {
-        emailRef = generateEmail('patient' + i);
-        personRef = generatePerson(emailRef, 'patient');
+        const { personRef } = generateAccount(`${objType}+${nextObjectNumber(objType)}`,objType);
         generateBhp(personRef);
       };
       break;
     case 'pcp':
       generate = () => {
-        emailRef = generateEmail('pcp' + i);
-        personRef = generatePerson(emailRef, 'pcp');
-        generatePcp(personRef);
+        const { accountRef, personRef } = generateAccount(`${objType}+${nextObjectNumber(objType)}`, objType);
+        generatePcp(personRef, accountRef);
       };
       break;
   }
 
-  for (var i = 1; i <= times; i++) {
+  if (models[objType] && models[objType].length) { i = models[objType].length; }
+  for (var i=0; i <= times; i++) {
     generate();
   }
 }
@@ -334,9 +343,9 @@ bulkGenerate('pcp', 3);
 bulkGenerate('patient', 3);
 bulkGenerate('bhp', 3);
 
-models['behavioralProvider'].forEach(bhp => {
-  simulateReferralFlows(bhp.dbId, models['patient'], models['medicalProvider']);
-});
+// models['behavioralProvider'].forEach(bhp => {
+//   simulateReferralFlows(bhp.dbId, models['patient'], models['medicalProvider']);
+// });
 
 
 generateFinalFixtures(models);

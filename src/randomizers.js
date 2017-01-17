@@ -10,8 +10,10 @@ const pickRandomGroup = (arr, max) => {
   let pick, randomGroup = [];
   for (var i = 0; i < groupSize; i++) {
     pick = pickRandom(arr);
-    arr.splice(arr.indexOf(pick), 1);
-    randomGroup.push(pick);
+    if (pick) {
+      arr.splice(arr.indexOf(pick), 1);
+      randomGroup.push(pick);
+    }
   }
   return randomGroup;
 };
